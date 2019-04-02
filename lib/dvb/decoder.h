@@ -3,6 +3,8 @@
 
 #include <lib/base/object.h>
 #include <lib/dvb/demux.h>
+#include <omx.h>
+
 
 class eSocketNotifier;
 
@@ -18,7 +20,8 @@ public:
 	enum { aMonoLeft, aStereo, aMonoRight };
 	void setChannel(int channel);
 	void stop();
-	int startPid(int pid, int type);
+//	int startPid(int pid, int type);
+	int startPid(int pid, int type, bool mode);
 	void flush();
 	void freeze();
 	void unfreeze();
@@ -30,6 +33,7 @@ class eDVBVideo: public iObject, public sigc::trackable
 {
 	DECLARE_REF(eDVBVideo);
 private:
+	cOmx *m_omx;
 	ePtr<eDVBDemux> m_demux;
 	int m_fd, m_fd_demux, m_dev;
 	static int m_close_invalidates_attributes;
@@ -43,7 +47,8 @@ public:
 	enum { UNKNOWN = -1, MPEG2, MPEG4_H264, VC1 = 3, MPEG4_Part2, VC1_SM, MPEG1, H265_HEVC, AVS = 16 };
 	eDVBVideo(eDVBDemux *demux, int dev);
 	void stop();
-	int startPid(int pid, int type=MPEG2);
+//	int startPid(int pid, int type=MPEG2);
+	int startPid(int pid, int type=MPEG2, bool is_pvr=false);
 	void flush();
 	void freeze();
 	int setSlowMotion(int repeat);
@@ -99,7 +104,9 @@ private:
 	ePtr<eDVBVideo> m_video;
 	ePtr<eDVBPCR> m_pcr;
 	ePtr<eDVBTText> m_text;
-	int m_vpid, m_vtype, m_apid, m_atype, m_pcrpid, m_textpid;
+//	int m_vpid, m_vtype, m_apid, m_atype, m_pcrpid, m_textpid;
+	int m_vpid, m_vtype, m_apid, m_atype, m_pcrpid, m_textpid, m_vstreamtype;
+	bool m_is_pvr, m_is_radio;
 	enum
 	{
 		changeVideo = 1,
@@ -126,8 +133,10 @@ public:
 	enum { pidNone = -1 };
 	eTSMPEGDecoder(eDVBDemux *demux, int decoder);
 	virtual ~eTSMPEGDecoder();
-	RESULT setVideoPID(int vpid, int type);
-	RESULT setAudioPID(int apid, int type);
+//	RESULT setVideoPID(int vpid, int type);
+//	RESULT setAudioPID(int apid, int type);
+	RESULT setVideoPID(int vpid, int type, int streamtype);
+	RESULT setAudioPID(int apid, int type, bool amode);
 	RESULT setAudioChannel(int channel);
 	int getAudioChannel();
 	RESULT setPCMDelay(int delay);

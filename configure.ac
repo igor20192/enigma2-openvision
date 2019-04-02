@@ -183,6 +183,23 @@ if test x"$withbwlcd255" != xno ; then
 fi
 AM_CONDITIONAL(HAVE_BWLCD255, test x"$withbwlcd255" != xno)
 
+if test `echo "$BOXTYPE" | cut -b 1-9` == "raspberry"; then
+	PKG_CHECK_MODULES(DVBCSA, libdvbcsa)
+	PKG_CHECK_MODULES(LIBNL, libnl-1 >= 1.0-pre8, has_libnl=yes, dummy=no)
+	PKG_CHECK_MODULES(LIBNL, libnl-3.0, has_libnl=yes, dummy=no)
+	if (test "${has_libnl}" = "no"); then
+		AC_MSG_ERROR(Netlink library is required)
+	fi
+
+#	AC_CHECK_LIB([rpihddevice], [LIBRPIHDDEVICE_LIBS="-lrpihddevice"], [AC_MSG_ERROR([Could not find librpihddevice])])
+#	AC_SUBST(LIBRPIHDDEVICE_LIBS)
+#	PKG_CHECK_MODULES(LIBRPIHDDEVICE, e2-rpihddevice)
+	BASE_LIBS+=" -lrpihddevice"
+
+	AC_DEFINE(OMX_SKIP64BIT, 1, [Required by the RPi implementation])
+	RPI_CFLAGS=" $LIBNL_CFLAGS"
+fi
+
 AC_ARG_WITH(libsdl,
 	AS_HELP_STRING([--with-libsdl],[use libsdl, yes or no]),
 	[with_libsdl=$withval],[with_libsdl=no])
@@ -231,8 +248,8 @@ AM_CONDITIONAL(UPDATE_PO, test "$with_po" = "yes")
 
 AC_ARG_WITH(alsa,
 	AC_HELP_STRING([--with-alsa], [Enable ALSA support]),
-	[[with_alse=$withval]],
-	[[with_alse=no]]
+	[[with_alsa=$withval]],
+	[[with_alsa=no]]
 )
 if test x"$with_alsa" == xyes ; then
 	AC_DEFINE(HAVE_ALSA, 1,[Enables ALSA support])
@@ -624,6 +641,10 @@ AX_CXX_COMPILE_STDCXX_11([ext],[mandatory])
 CPPFLAGS="$CPPFLAGS $PYTHON_CPPFLAGS"
 CFLAGS="$CFLAGS -Wall"
 CXXFLAGS="$CXXFLAGS -Wall $BASE_CFLAGS $ENIGMA2_CFLAGS $PTHREAD_CFLAGS $OPENMP_CFLAGS $ALSA_CFLAGS $AMCODEC_CFLAGS $AMADEC_CFLAGS $DVBCSA_CFLAGS"
+
+if test `echo "$BOXTYPE" | cut -b 1-9` == "raspberry"; then
+	CXXFLAGS+="$RPI_CFLAGS"
+fi
 
 AC_CONFIG_FILES([
 Makefile

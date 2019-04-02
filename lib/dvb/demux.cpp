@@ -49,7 +49,11 @@ static int determineBufferCount()
 	}
 	unsigned int megabytes = si.totalram >> 20;
 	int result;
-	if (megabytes > 400)
+	if (megabytes > 1600)
+		result = 160; // 4096MB systems: Use 32MB IO buffers (PC)
+	else if (megabytes > 800)
+		result = 80; // 2048MB systems: Use 16MB IO buffers (PC,rpi)
+	else if (megabytes > 400)
 		result = 40; // 1024MB systems: Use 8MB IO buffers (vusolo2, vuduo2, ...)
 	else if (megabytes > 200)
 		result = 20; // 512MB systems: Use 4MB IO buffers (et9x00, vuultimo, ...)
@@ -75,11 +79,13 @@ eDVBDemux::eDVBDemux(int adapter, int demux):
 {
 	if (CFile::parseInt(&m_dvr_source_offset, "/proc/stb/frontend/dvr_source_offset") == 0)
 		eDebug("[eDVBDemux] using %d for PVR DMX_SET_SOURCE", m_dvr_source_offset);
-
+	decsa = new cDeCSA(adapter, demux);
+	eDebug("[RPi eDVBDemux] new cDeCSA (adapter%d, demux%d)", adapter, demux);
 }
 
 eDVBDemux::~eDVBDemux()
 {
+	delete decsa;
 }
 
 int eDVBDemux::openDemux(void)
@@ -216,6 +222,20 @@ RESULT eDVBDemux::connectEvent(const sigc::slot1<void,int> &event, ePtr<eConnect
 {
 	conn = new eConnection(this, m_event.connect(event));
 	return 0;
+}
+
+RESULT eDVBDemux::setCaDescr(ca_descr_t *ca_descr, bool initial)
+{
+	return decsa->SetDescr(ca_descr, initial);
+}
+
+RESULT eDVBDemux::setCaPid(ca_pid_t *ca_pid)
+{
+	return decsa->SetCaPid(ca_pid);
+}
+
+bool eDVBDemux::decrypt(uint8_t *data, int len, int &packetsCount) {
+	return decsa->Decrypt(data, len, packetsCount);
 }
 
 void eDVBSectionReader::data(int)
@@ -736,6 +756,7 @@ eDVBTSRecorder::~eDVBTSRecorder()
 
 RESULT eDVBTSRecorder::start()
 {
+	eDebug("eDVBTSRecorder::start");
 	std::map<int,int>::iterator i(m_pids.begin());
 
 	if (m_running)
@@ -749,6 +770,7 @@ RESULT eDVBTSRecorder::start()
 
 	char filename[128];
 	snprintf(filename, 128, "/dev/dvb/adapter%d/demux%d", m_demux->adapter, m_demux->demux);
+	eDebug("eDVBTSRecorder::start %s", filename);
 
 #if HAVE_HISILICON
 	m_source_fd = ::open(filename, O_RDONLY | O_CLOEXEC | O_NONBLOCK);
@@ -785,14 +807,16 @@ RESULT eDVBTSRecorder::start()
 	if (!m_target_filename.empty())
 		m_thread->startSaveMetaInformation(m_target_filename);
 
-	m_thread->start(m_source_fd);
-	m_running = 1;
+//	m_thread->start(m_source_fd);
+//	m_running = 1;
 
 	while (i != m_pids.end()) {
 		startPID(i->first);
 		++i;
 	}
 
+	m_thread->start(m_source_fd, m_demux);
+	m_running = 1;	
 	return 0;
 }
 

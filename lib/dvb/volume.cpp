@@ -138,8 +138,12 @@ int eDVBVolumecontrol::checkVolume(int vol)
 void eDVBVolumecontrol::setVolume(int left, int right)
 {
 		/* left, right is 0..100 */
+/*	cXineLib *xineLib = cXineLib::getInstance();	*/
+//	m_omx->Init(0,0);
+	eDebug("[cOmxDevice] SetVolume(L:%d)(R:%d)", left, right);
 	leftVol = checkVolume(left);
 	rightVol = checkVolume(right);
+	m_omx->SetVolume(leftVol);
 
 #ifdef HAVE_ALSA
 	eDebug("[eDVBVolumecontrol] Setvolume: ALSA leftVol=%d", leftVol);
@@ -210,6 +214,9 @@ void eDVBVolumecontrol::volumeMute()
 	//HACK?
 	CFile::writeInt("/proc/stb/audio/j1_mute", 1);
 #endif
+/*	cXineLib *xineLib = cXineLib::getInstance();	*/
+//	m_omx->Init(0,0);
+	m_omx->SetMute(true);
 }
 
 void eDVBVolumecontrol::volumeUnMute()
@@ -233,6 +240,9 @@ void eDVBVolumecontrol::volumeUnMute()
 	//HACK?
 	CFile::writeInt("/proc/stb/audio/j1_mute", 0);
 #endif
+/*	cXineLib *xineLib = cXineLib::getInstance();	*/
+//	m_omx->Init(0,0);
+	m_omx->SetMute(false);
 }
 
 void eDVBVolumecontrol::volumeToggleMute()

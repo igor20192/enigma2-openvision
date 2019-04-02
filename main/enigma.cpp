@@ -94,6 +94,7 @@ void keyEvent(const eRCKey &key)
 #include <lib/dvb/db.h>
 #include <lib/dvb/dvbtime.h>
 #include <lib/dvb/epgcache.h>
+#include <rpisetup.h>
 
 /* Defined in eerror.cpp */
 void setDebugTime(bool enable);
@@ -208,6 +209,9 @@ int main(int argc, char **argv)
 	if (getenv("ENIGMA_DEBUG_TIME"))
 		setDebugTime(atoi(getenv("ENIGMA_DEBUG_TIME")) != 0);
 
+	cRpiSetup *m_setup;
+	m_setup->HwInit();
+
 	ePython python;
 	eMain main;
 
@@ -318,6 +322,8 @@ int main(int argc, char **argv)
 		p.clear();
 		p.flush();
 	}
+
+	m_setup->DropInstance();
 
 	return exit_code;
 }

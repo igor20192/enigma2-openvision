@@ -72,6 +72,7 @@ public:
 	void thread();
 	void stop();
 	void start(int sourcefd);
+	void start(int fd, ePtr<eDVBDemux> &demux);
 
 	enum { evtEOF, evtReadError, evtWriteError, evtUser, evtStopped };
 	sigc::signal1<void,int> m_event;
@@ -93,6 +94,7 @@ protected:
 private:
 	int m_stop;
 	eFixedMessagePump<int> m_messagepump;
+	ePtr<iTsSource> m_source;
 	void recvEvent(const int &evt);
 };
 

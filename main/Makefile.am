@@ -46,6 +46,7 @@ enigma2_LDADD = \
 	@AMCODEC_LIBS@ \
 	@AMADEC_LIBS@ \
 	@DVBCSA_LIBS@ \
+	@LIBNL_LIBS@ \
 	@AVAHI_LIBS@ \
 	@LIBDL_LIBS@ \
 	-ltuxtxt32bpp

@@ -99,6 +99,7 @@ int eDVBPMTParser::getProgramInfo(program &program)
 				video.type = videoStream::vtMPEG2;
 				audio.type = audioStream::atMPEG;
 				audio.rdsPid = -1;
+				video.orig_streamtype= streamtype;
 
 				switch (streamtype)
 				{

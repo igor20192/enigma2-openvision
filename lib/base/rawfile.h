@@ -3,23 +3,29 @@
 
 #include <string>
 #include <lib/base/itssource.h>
+#include <lib/base/tsRingbuffer.h>
+#include <lib/dvb/edvbdemux.h>
 
 class eRawFile: public iTsSource
 {
 	DECLARE_REF(eRawFile);
-	eSingleLock m_lock;
+//	eSingleLock m_lock;
 public:
 	eRawFile(int packetsize = 188);
 	~eRawFile();
 	int open(const char *filename);
+	void setfd(int fd);
 
 	// iTsSource
 	ssize_t read(off_t offset, void *buf, size_t count);
 	off_t length();
 	off_t offset();
 	int valid();
-private:
+//private:
+protected:
+	eSingleLock m_lock;
 	int m_fd;
+private:
 	int m_nrfiles;
 	off_t m_splitsize;
 	off_t m_totallength;
@@ -34,6 +40,24 @@ private:
 	int switchOffset(off_t off);
 	off_t lseek_internal(off_t offset);
 	int openFileUncached(int nr);
+};
+
+class eDecryptRawFile: public eRawFile
+{
+public:
+	eDecryptRawFile(int packetsize = 188);
+	~eDecryptRawFile();
+	void setDemux(ePtr<eDVBDemux> demux);
+	ssize_t read(off_t offset, void *buf, size_t count);
+private:
+	ePtr<eDVBDemux> demux;
+	cRingBufferLinear *ringBuffer;
+	int bs_size;
+	bool delivered;
+	int lastPacketsCount;
+	bool stream_correct;
+
+	uint8_t* getPackets(int &packetsCount);
 };
 
 #endif

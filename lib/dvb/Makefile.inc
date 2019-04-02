@@ -32,7 +32,11 @@ dvb_libenigma_dvb_a_SOURCES = \
 	dvb/pmtparse.cpp \
 	dvb/encoder.cpp \
 	dvb/fbc.cpp \
-	dvb/atsc.cpp
+	dvb/atsc.cpp \
+	dvb/ca_connector.cpp \
+	dvb/decsa.cpp \
+	dvb/edvbdemux.cpp \
+	dvb/omxdecoder.cpp
 
 if HAVE_AMLOGIC
 dvb_libenigma_dvb_a_SOURCES += dvb/amldecoder.cpp
@@ -77,7 +81,11 @@ dvbinclude_HEADERS = \
 	dvb/pmtparse.h \
 	dvb/encoder.h \
 	dvb/fbc.h \
-	dvb/atsc.h
+	dvb/atsc.h \
+	dvb/ca_connector.h \
+	dvb/decsa.h \
+	dvb/edvbdemux.h \
+	dvb/omxdecoder.h
 if HAVE_AMLOGIC
 dvbinclude_HEADERS += dvb/amldecoder.h
 endif

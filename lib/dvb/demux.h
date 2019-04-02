@@ -6,8 +6,9 @@
 #include <lib/dvb/idemux.h>
 #include <lib/dvb/pvrparse.h>
 #include "filepush.h"
+#include <lib/dvb/edvbdemux.h>
 
-class eDVBDemux: public iDVBDemux
+/*class eDVBDemux: public iDVBDemux		-->	class declaration moved to edvbdemux.h
 {
 	DECLARE_REF(eDVBDemux);
 public:
@@ -34,9 +35,12 @@ public:
 	int openDVR(int flags);
 
 	int getRefCount() { return ref; }
+	RESULT setCaDescr(ca_descr_t *ca_descr, bool initial);
+	RESULT setCaPid(ca_pid_t *ca_pid);
+	bool decrypt(uint8_t *data, int len, int &packetsCount);
 private:
 	int adapter, demux, source;
-
+	cDeCSA *decsa;
 	int m_dvr_busy;
 	int m_dvr_id;
 	int m_dvr_source_offset;
@@ -56,7 +60,7 @@ private:
 	sigc::signal1<void, int> m_event;
 
 	int openDemux(void);
-};
+};*/
 
 class eDVBSectionReader: public iDVBSectionReader, public sigc::trackable
 {

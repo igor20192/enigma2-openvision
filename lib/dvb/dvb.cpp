@@ -97,7 +97,15 @@ eDVBResourceManager::eDVBResourceManager()
 		if (eDVBAdapterLinux::isusb(num_adapter))
 		{
 			eDVBAdapterLinux *adapter = new eDVBUsbAdapter(num_adapter);
-			addAdapter(adapter);
+//			addAdapter(adapter);
+			adapter->scanDevices();
+			addAdapter(adapter, true);
+		}
+		else
+		{
+			eDVBAdapterLinux *adapter = new eDVBAdapterLinux(num_adapter);
+			adapter->scanDevices();
+			addAdapter(adapter, true);
 		}
 		num_adapter++;
 	}
@@ -1489,6 +1497,21 @@ bool eDVBResourceManager::canMeasureFrontendInputPower()
 	return false;
 }
 
+RESULT eDVBResourceManager::getAdapterDemux(ePtr<eDVBDemux> &demux, int adapter_nr, int demux_nr)
+{
+	eSmartPtrList<iDVBAdapter>::iterator i(m_adapter.begin());
+
+	while (adapter_nr && (i != m_adapter.end())) {
+		--adapter_nr;
+		++i;
+	}
+
+	if (i != m_adapter.end())
+		return i->getDemux(demux, demux_nr);
+	else
+		return -1;
+}
+
 class eDVBChannelFilePush: public eFilePushThread
 {
 public:
@@ -2110,8 +2133,9 @@ RESULT eDVBChannel::requestTsidOnid()
 
 RESULT eDVBChannel::getDemux(ePtr<iDVBDemux> &demux, int cap)
 {
-	ePtr<eDVBAllocatedDemux> &our_demux = (cap & capDecode) ? m_decoder_demux : m_demux;
-
+//	ePtr<eDVBAllocatedDemux> &our_demux = (cap & capDecode) ? m_decoder_demux : m_demux;
+	ePtr<eDVBAllocatedDemux> &our_demux = m_demux; /* enigma2 [RPi] */
+	
 	eDebug("[eDVBChannel] getDemux cap=%02X", cap);
 
 	if (!m_frontend)
@@ -2184,9 +2208,10 @@ RESULT eDVBChannel::playSource(ePtr<iTsSource> &source, const char *streaminfo_f
 	m_source = source;
 	m_tstools.setSource(m_source, streaminfo_file);
 
+	m_pvr_fd_dst = ::open("/tmp/ENIGMA_FIFO", O_RDWR);
 	if (m_pvr_fd_dst < 0)
 	{
-		ePtr<eDVBAllocatedDemux> &demux = m_demux ? m_demux : m_decoder_demux;
+/*		ePtr<eDVBAllocatedDemux> &demux = m_demux ? m_demux : m_decoder_demux;
 		if (demux)
 		{
 			m_pvr_fd_dst = demux->get().openDVR(O_WRONLY);
@@ -2200,7 +2225,9 @@ RESULT eDVBChannel::playSource(ePtr<iTsSource> &source, const char *streaminfo_f
 		{
 			eDebug("[eDVBChannel] no demux allocated yet.. so its not possible to open the dvr device!!");
 			return -ENODEV;
-		}
+		}*/
+		eDebug("can't open DVR device - FIFO file (%m)");
+		return -ENODEV;
 	}
 
 	m_pvr_thread = new eDVBChannelFilePush(m_source->getPacketSize());
@@ -2228,7 +2255,8 @@ void eDVBChannel::stop()
 	}
 	if (m_pvr_fd_dst >= 0)
 	{
-		::close(m_pvr_fd_dst);
+//		::close(m_pvr_fd_dst);
+/*	Pipe '/tmp/ENIGMA_FIFO' closed in eDVBServicePlay::stop() (lib/service/servicedvb.cpp) */
 		m_pvr_fd_dst = -1;
 	}
 	m_source = NULL;

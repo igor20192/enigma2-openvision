@@ -6,6 +6,7 @@
 #endif
 
 #include <lib/base/ebase.h>
+#include <omx.h>
 
 class eDVBVolumecontrol
 {
@@ -19,6 +20,7 @@ private:
 #ifdef SWIG
 	~eDVBVolumecontrol();
 #endif
+	cOmx *m_omx;
 	int openMixer();
 	void closeMixer(int fd);
 
